@@ -10,12 +10,16 @@ $ErrorActionPreference = "Stop"
 
 $Base = "https://cdn.gachaplay.online/games/frickbears-3"
 $Dest = Join-Path (Split-Path -Parent $PSScriptRoot) "Game"
+# The CDN rejects non-browser User-Agents with HTTP 403.
+$Headers = @{
+    "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+}
 
 New-Item -ItemType Directory -Force -Path $Dest | Out-Null
 
 Write-Host "==> Downloading index.html"
 $indexPath = Join-Path $Dest "index.html"
-Invoke-WebRequest -Uri "$Base/index.html" -OutFile $indexPath -UseBasicParsing
+Invoke-WebRequest -Uri "$Base/index.html" -OutFile $indexPath -UseBasicParsing -Headers $Headers
 $html = Get-Content $indexPath -Raw
 
 Write-Host "==> Resolving file list from manifestFiles()"
@@ -47,7 +51,7 @@ foreach ($name in $files) {
         continue
     }
     Write-Host "    fetch   $name"
-    Invoke-WebRequest -Uri "$Base/$name" -OutFile $out -UseBasicParsing
+    Invoke-WebRequest -Uri "$Base/$name" -OutFile $out -UseBasicParsing -Headers $Headers
 }
 
 $total = (Get-ChildItem $Dest -File | Measure-Object -Property Length -Sum).Sum

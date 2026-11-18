@@ -21,7 +21,7 @@ python3 - "$DEST/index.html" "$BASE" "$DEST" <<'PY'
 import os
 import re
 import sys
-import urllib.request
+import subprocess
 
 index_path, base, dest = sys.argv[1], sys.argv[2], sys.argv[3]
 
@@ -59,7 +59,17 @@ for name in files:
         continue
     url = "%s/%s" % (base, name)
     print("    fetch   %s" % name)
-    urllib.request.urlretrieve(url, out)
+    # The CDN rejects Python's default User-Agent with HTTP 403, so use curl
+    # with a browser UA. Download to a .part file so a failed/partial fetch is
+    # never mistaken for a valid cached asset on the next run.
+    partial = out + ".part"
+    subprocess.run([
+        "curl", "-fsSL", "--retry", "3", "--retry-delay", "1",
+        "-A", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+              "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+        "-o", partial, url,
+    ], check=True)
+    os.replace(partial, out)
 
 total = sum(
     os.path.getsize(os.path.join(dest, f))

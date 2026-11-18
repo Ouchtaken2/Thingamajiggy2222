@@ -107,6 +107,10 @@ All options are saved on the device instantly — **no rebuild required**.
 - **"Could not parse file list"** in the build log — the CDN changed its
   `index.html` layout. Open the URL and update the regex in
   `Scripts/fetch-web-build.sh`.
+- **"HTTP Error 403: Forbidden"** in the download step — the CDN rejects
+  non-browser User-Agents. Both downloaders now send a browser UA and use
+  `curl`; if the CDN tightens this again, update the `-A` header in
+  `Scripts/fetch-web-build.sh`.
 - **Game stuck on "Downloading..."** — make sure every file listed in
   `manifestFiles()` exists inside `Game/` (`runner.data`, `runner.js`,
   `runner.wasm`, `audio-worklet.js`, `game.unx` are the big ones).
