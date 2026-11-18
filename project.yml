@@ -20,10 +20,12 @@ targets:
           CODE_SIGNING_ALLOWED: NO
           CODE_SIGNING_REQUIRED: NO
           SWIFT_VERSION: "5.0"
+          PRODUCT_BUNDLE_IDENTIFIER: com.fanport.frickbears3
         Release:
           CODE_SIGNING_ALLOWED: NO
           CODE_SIGNING_REQUIRED: NO
           SWIFT_VERSION: "5.0"
+          PRODUCT_BUNDLE_IDENTIFIER: com.fanport.frickbears3
     info:
       path: App/Info.plist
       properties:

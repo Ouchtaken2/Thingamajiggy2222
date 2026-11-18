@@ -66,8 +66,8 @@ final class GameURLSchemeHandler: NSObject, WKURLSchemeHandler {
         return candidates.first { fileManager.fileExists(atPath: $0.path) }
     }
 
-    private func mimeHeaders(for extension: String) -> [String: String] {
-        switch extension.lowercased() {
+    private func mimeHeaders(for fileExtension: String) -> [String: String] {
+        switch fileExtension.lowercased() {
         case "html", "htm":            return ["Content-Type": "text/html; charset=utf-8"]
         case "js":                     return ["Content-Type": "text/javascript; charset=utf-8"]
         case "wasm":                   return ["Content-Type": "application/wasm"]
