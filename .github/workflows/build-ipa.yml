@@ -1,0 +1,46 @@
+name: Build Frickbears3 iOS IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download game web build
+        run: bash Scripts/fetch-web-build.sh
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+
+      - name: Build unsigned app
+        run: |
+          xcodebuild \
+            -project Frickbears3iOS.xcodeproj \
+            -scheme Frickbears3iOS \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/Frickbears3iOS.app Payload/
+          zip -qry Frickbears3iOS.ipa Payload
+          ls -lh Frickbears3iOS.ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Frickbears3iOS-IPA
+          path: Frickbears3iOS.ipa
+          if-no-files-found: error

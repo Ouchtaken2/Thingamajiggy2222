@@ -1,0 +1,46 @@
+name: Frickbears3iOS
+
+options:
+  bundleIdPrefix: com.fanport.frickbears3
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+targets:
+  Frickbears3iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    resources:
+      - path: Game
+    settings:
+      configs:
+        Debug:
+          CODE_SIGNING_ALLOWED: NO
+          CODE_SIGNING_REQUIRED: NO
+          SWIFT_VERSION: "5.0"
+        Release:
+          CODE_SIGNING_ALLOWED: NO
+          CODE_SIGNING_REQUIRED: NO
+          SWIFT_VERSION: "5.0"
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: "Frickbear's 3"
+        CFBundleName: "Frickbears3iOS"
+        CFBundleIdentifier: "com.fanport.frickbears3"
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        LSRequiresIPhoneOS: true
+        UIRequiredDeviceCapabilities:
+          - arm64
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIViewControllerBasedStatusBarAppearance: false
+        UIStatusBarHidden: true
+        ITSAppUsesNonExemptEncryption: false
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
