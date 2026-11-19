@@ -7,6 +7,7 @@ final class SettingsViewController: UITableViewController {
     private let config = AppConfigStore.shared
     private let cellIdentifier = "SettingsCell"
     var onDismiss: (() -> Void)?
+    var onInspect: (() -> Void)?
 
     init() {
         super.init(style: .insetGrouped)
@@ -64,7 +65,7 @@ final class SettingsViewController: UITableViewController {
         switch section {
         case 0: return 1  // controls
         case 1: return 1  // gameplay
-        case 2: return 2  // diagnostics
+        case 2: return 3  // diagnostics
         default: return 1 // minigames
         }
     }
@@ -111,6 +112,12 @@ final class SettingsViewController: UITableViewController {
             toggle.valueChanged = { [weak self] value in self?.config.showRAM = value }
             cell.accessoryView = toggle
 
+        case (2, 2):
+            cell.textLabel?.text = "Inspect Page"
+            cell.detailTextLabel?.text = nil
+            cell.accessoryType = .disclosureIndicator
+            cell.accessoryView = nil
+
         case (3, 0):
             cell.textLabel?.text = "Minigame Zoom Button"
             cell.accessoryType = .none
@@ -131,6 +138,8 @@ final class SettingsViewController: UITableViewController {
             navigationController?.pushViewController(RemapViewController(), animated: true)
         } else if indexPath.section == 1 && indexPath.row == 0 {
             navigationController?.pushViewController(SpeedPickerViewController(), animated: true)
+        } else if indexPath.section == 2 && indexPath.row == 2 {
+            onInspect?()
         }
     }
 }
@@ -172,6 +181,56 @@ final class SpeedPickerViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         config.gameSpeed = speeds[indexPath.row]
         navigationController?.popViewController(animated: true)
+    }
+}
+
+// MARK: - Page inspector
+
+/// Read-only, shareable dump of the live WKWebView page. This is purely a
+/// troubleshooting aid — it reports what the browser is actually rendering.
+final class InspectViewController: UIViewController {
+
+    private let text: String
+
+    init(text: String) {
+        self.text = text
+        super.init(nibName: nil, bundle: nil)
+        title = "Page Inspect"
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func loadView() {
+        view = UIView()
+        view.backgroundColor = .systemBackground
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .action,
+            target: self,
+            action: #selector(shareTapped)
+        )
+
+        let textView = UITextView()
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.text = text
+        textView.font = .systemFont(ofSize: 11)
+        textView.isEditable = false
+        textView.isSelectable = true
+        view.addSubview(textView)
+        NSLayoutConstraint.activate([
+            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
+            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
+            textView.topAnchor.constraint(equalTo: view.topAnchor, constant: 12),
+            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -12)
+        ])
+    }
+
+    @objc private func shareTapped() {
+        let activity = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        present(activity, animated: true)
     }
 }
 

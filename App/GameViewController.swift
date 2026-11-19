@@ -1,7 +1,7 @@
 import UIKit
 import WebKit
 
-final class GameViewController: UIViewController, WKScriptMessageHandler {
+final class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigationDelegate {
 
     private static let scheme = "fb3"
     private static let statsHandler = "fb3stats"
@@ -105,6 +105,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         userContent.addUserScript(cssScript)
 
         let webView = WKWebView(frame: .zero, configuration: config)
+        webView.navigationDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
         webView.isOpaque = false
         webView.backgroundColor = .black
@@ -359,6 +360,17 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
                 WebBridge.resume(self.webView)
             }
             let navigation = UINavigationController(rootViewController: settings)
+            settings.onInspect = { [weak self, weak navigation] in
+                guard let self, let navigation else { return }
+                WebBridge.inspect(self.webView) { text in
+                    DispatchQueue.main.async {
+                        navigation.pushViewController(
+                            InspectViewController(text: text),
+                            animated: true
+                        )
+                    }
+                }
+            }
             navigation.modalPresentationStyle = .overFullScreen
             self.present(navigation, animated: true)
         }
@@ -383,6 +395,26 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
             overlay.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         self.overlay = overlay
+    }
+
+    // MARK: - Navigation
+
+    /// The bundle is fully offline. Never let the page navigate to a remote
+    /// site — that is the only way an unexpected external overlay could appear.
+    func webView(_ webView: WKWebView,
+                 decidePolicyFor navigationAction: WKNavigationAction,
+                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        guard let url = navigationAction.request.url else {
+            decisionHandler(.cancel)
+            return
+        }
+        let scheme = url.scheme?.lowercased() ?? ""
+        if scheme == Self.scheme || scheme == "about" || scheme == "data" {
+            decisionHandler(.allow)
+        } else {
+            NSLog("[fb3] blocked external navigation: %@", url.absoluteString)
+            decisionHandler(.cancel)
+        }
     }
 
     // MARK: - Lifecycle

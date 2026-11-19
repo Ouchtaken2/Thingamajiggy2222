@@ -30,14 +30,30 @@ enum WebBridge {
         let buttons = type == "mouseup" ? 0 : 1
         let js = """
         (function(){
-          var c=document.getElementById('canvas');
-          if (!c) return;
-          var ev=new MouseEvent(\(q(type)),{
+          var x=\(x), y=\(y), type=\(q(type)), buttons=\(buttons);
+          var canvas=document.getElementById('canvas');
+          // GameMaker draws its UI on the canvas, but some prompts (including
+          // scare-style fake system dialogs) are plain DOM buttons. Dispatch
+          // to whichever element is actually under the tap.
+          var target=document.elementFromPoint(x,y) || document.body;
+          var onCanvas = canvas && (target===canvas || canvas.contains(target));
+          var t = onCanvas ? canvas : target;
+          var ev=new MouseEvent(type,{
             bubbles:true, cancelable:true,
-            clientX:\(x), clientY:\(y),
-            button:0, buttons:\(buttons), view:window
+            clientX:x, clientY:y,
+            button:0, buttons:buttons, view:window
           });
-          c.dispatchEvent(ev);
+          t.dispatchEvent(ev);
+          // DOM buttons react to `click`, not just mouseup. The canvas is
+          // exempt so a canvas-based OK button is not fired twice.
+          if (type==='mouseup' && !onCanvas) {
+            try {
+              t.dispatchEvent(new MouseEvent('click',{
+                bubbles:true, cancelable:true,
+                clientX:x, clientY:y, button:0, buttons:0, view:window
+              }));
+            } catch (e) {}
+          }
         })();
         """
         webView.evaluateJavaScript(js, completionHandler: nil)
@@ -157,6 +173,45 @@ enum WebBridge {
         })();
         """
         webView.evaluateJavaScript(js, completionHandler: nil)
+    }
+
+    /// Diagnostic dump of the live page: URL, visible text and any absolutely
+    /// positioned elements. Used by the Settings screen to identify unexpected
+    /// overlays without needing a screenshot or Xcode console.
+    static func inspect(_ webView: WKWebView, completion: @escaping (String) -> Void) {
+        let js = """
+        (function(){
+          function clip(s,n){ s=String(s||''); return s.length>n?s.slice(0,n)+'…':s; }
+          var out=[];
+          out.push('URL: ' + location.href);
+          out.push('TITLE: ' + document.title);
+          out.push('--- VISIBLE TEXT ---');
+          out.push(clip(document.body ? document.body.innerText : '', 6000));
+          out.push('--- POSITIONED ELEMENTS ---');
+          var all=document.querySelectorAll('body *'), n=0;
+          for (var i=0;i<all.length;i++){
+            var e=all[i], cs=getComputedStyle(e), r=e.getBoundingClientRect();
+            if (cs.position!=='fixed' && cs.position!=='absolute') continue;
+            if (cs.display==='none' || cs.visibility==='hidden') continue;
+            if (r.width<40 || r.height<20) continue;
+            out.push(clip(e.tagName+'#'+(e.id||'-')+'.'+(typeof e.className==='string'?e.className:'')+
+              ' pos='+cs.position+' z='+cs.zIndex+
+              ' rect='+Math.round(r.left)+','+Math.round(r.top)+' '+Math.round(r.width)+'x'+Math.round(r.height)+
+              ' text='+String(e.innerText||'').replace(/\\s+/g,' ').trim(),240));
+            if (++n>40) break;
+          }
+          out.push('--- IFRAMES ---');
+          var fs=document.querySelectorAll('iframe');
+          for (var j=0;j<fs.length;j++) out.push(clip(fs[j].src,200));
+          out.push('--- SCRIPT SRC ---');
+          var ss=document.querySelectorAll('script[src]');
+          for (var k=0;k<ss.length;k++) out.push(clip(ss[k].src,200));
+          return out.join('\\n');
+        })();
+        """
+        webView.evaluateJavaScript(js) { result, _ in
+            completion(result as? String ?? "No result: \(String(describing: result))")
+        }
     }
 
     private static func q(_ value: String) -> String {

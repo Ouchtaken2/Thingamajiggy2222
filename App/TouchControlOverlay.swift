@@ -40,6 +40,15 @@ final class TouchControlOverlay: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    /// The overlay covers the whole screen, but only its buttons should take
+    /// taps. Returning nil for the overlay itself lets taps in empty areas
+    /// fall through to the WKWebView (needed for the game's own on-screen
+    /// prompts, doors, monitor tabs, etc.).
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        guard let hit = super.hitTest(point, with: event) else { return nil }
+        return hit === self ? nil : hit
+    }
+
     private func buildControls() {
         // D-pad (left side)
         addButton(.up,    glyph: "▲", x: -0.060, y: -0.085)
