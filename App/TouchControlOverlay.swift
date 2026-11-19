@@ -42,18 +42,18 @@ final class TouchControlOverlay: UIView {
 
     private func buildControls() {
         // D-pad (left side)
-        place(button(.up,    glyph: "▲", x: -0.060, y: -0.085))
-        place(button(.down,  glyph: "▼", x: -0.060, y:  0.085))
-        place(button(.left,  glyph: "◀", x: -0.115, y:  0.000))
-        place(button(.right, glyph: "▶", x: -0.005, y:  0.000))
+        addButton(.up,    glyph: "▲", x: -0.060, y: -0.085)
+        addButton(.down,  glyph: "▼", x: -0.060, y:  0.085)
+        addButton(.left,  glyph: "◀", x: -0.115, y:  0.000)
+        addButton(.right, glyph: "▶", x: -0.005, y:  0.000)
 
         // Action cluster (right side)
-        place(button(.x,  glyph: "X", x:  0.005, y: -0.085))
-        place(button(.y,  glyph: "Y", x: -0.060, y:  0.000))
-        place(button(.a,  glyph: "A", x:  0.060, y:  0.000))
-        place(button(.b,  glyph: "B", x:  0.005, y:  0.085))
-        place(button(.l1, glyph: "L", x:  0.060, y: -0.085))
-        place(button(.r1, glyph: "R", x:  0.115, y:  0.000))
+        addButton(.x,  glyph: "X", x:  0.005, y: -0.085)
+        addButton(.y,  glyph: "Y", x: -0.060, y:  0.000)
+        addButton(.a,  glyph: "A", x:  0.060, y:  0.000)
+        addButton(.b,  glyph: "B", x:  0.005, y:  0.085)
+        addButton(.l1, glyph: "L", x:  0.060, y: -0.085)
+        addButton(.r1, glyph: "R", x:  0.115, y:  0.000)
 
         // Utilities
         place(utilityButton("II") { [weak self] in self?.onPauseToggle?() },
@@ -78,7 +78,10 @@ final class TouchControlOverlay: UIView {
         refreshConfig()
     }
 
-    private func button(_ action: TouchAction, glyph: String, x: CGFloat, y: CGFloat) -> ActionButton {
+    /// Creates and places in one step. Kept separate from `place` so the two
+    /// calls don't share `x:`/`y:` labels (which confuses Swift overload
+    /// resolution when nested).
+    private func addButton(_ action: TouchAction, glyph: String, x: CGFloat, y: CGFloat) {
         let button = ActionButton(action: action, glyph: glyph)
         button.addTarget(self, action: #selector(keyDown(_:)), for: .touchDown)
         button.addTarget(
@@ -87,7 +90,7 @@ final class TouchControlOverlay: UIView {
             for: [.touchUpInside, .touchUpOutside, .touchCancel]
         )
         actionButtons.append(button)
-        return button
+        place(button, x: x, y: y)
     }
 
     private func utilityButton(_ title: String, action: @escaping () -> Void) -> UIButton {

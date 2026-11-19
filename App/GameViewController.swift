@@ -106,7 +106,6 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
 
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.translatesAutoresizingMaskIntoConstraints = false
-        webView.isScrollEnabled = false
         webView.isOpaque = false
         webView.backgroundColor = .black
         webView.scrollView.isScrollEnabled = false

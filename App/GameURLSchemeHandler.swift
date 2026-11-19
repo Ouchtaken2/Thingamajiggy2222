@@ -63,7 +63,7 @@ final class GameURLSchemeHandler: NSObject, WKURLSchemeHandler {
             Bundle.main.bundleURL.appendingPathComponent(relative)
         ]
 
-        return candidates.first { fileManager.fileExists(atPath: $0.path) }
+        return candidates.compactMap { $0 }.first { fileManager.fileExists(atPath: $0.path) }
     }
 
     private func mimeHeaders(for fileExtension: String) -> [String: String] {
