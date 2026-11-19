@@ -43,6 +43,9 @@ but consume your monthly free quota.
    - builds an unsigned `.app` and zips it into an `.ipa`
 4. Click the completed run → **Artifacts** → download
    **Frickbears3iOS-IPA** (a .zip). Extract it to get `Frickbears3iOS.ipa`.
+   The IPA should be roughly **45–55 MB**. If it is only a few hundred KB,
+   the game assets did not get bundled — check the build log's `du -sh`
+   output and re-run the workflow.
 
 ### 3. Sign & install on your iPhone with Sideloadly (Windows)
 

@@ -35,6 +35,19 @@ jobs:
         run: |
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/Frickbears3iOS.app Payload/
+
+          # XcodeGen does not reliably bundle the Game/ folder, so copy it in
+          # explicitly. GameURLSchemeHandler serves from App.app/Game/.
+          mkdir -p Payload/Frickbears3iOS.app/Game
+          cp -R Game/. Payload/Frickbears3iOS.app/Game/
+
+          # Fail loudly if the assets did not make it in, instead of shipping
+          # a useless 96 KB IPA.
+          test -f Payload/Frickbears3iOS.app/Game/index.html
+          test -f Payload/Frickbears3iOS.app/Game/runner.wasm
+          test -f Payload/Frickbears3iOS.app/Game/runner.data
+
+          du -sh Payload/Frickbears3iOS.app/Game
           zip -qry Frickbears3iOS.ipa Payload
           ls -lh Frickbears3iOS.ipa
 
